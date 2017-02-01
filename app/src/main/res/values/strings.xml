@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Oauth request</string>
+    <string name="nameTitleTextView">nameTitleTextView</string>
+</resources>
