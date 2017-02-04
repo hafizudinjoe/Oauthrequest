@@ -2,40 +2,24 @@ package com.example.breli.oauthrequest;
 
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.TextView;
 
 import com.github.scribejava.core.builder.ServiceBuilder;
+import com.github.scribejava.core.model.OAuth1AccessToken;
 import com.github.scribejava.core.model.Token;
 import com.github.scribejava.core.oauth.OAuthService;
 
+import org.junit.rules.Verifier;
+import java.util.List;
+
+import com.example.breli.oauthrequest.AuthenticationActivity;
 
 public class MainActivity extends AppCompatActivity{
-
-    /*final String URL_BASE = "http://wbsapi.withings.net/measure?action=getmeas";
-
-    /*final String url =  URL_BASE + URL_ACTION + URL_USERID + URL_OAUTH_CONSUMER_KEY
-            + URL_OAUTH_NONCE + URL_OAUTH_SIGNATURE + URL_OAUTH_SIGNATURE_METHOD
-            + URL_OAUTH_TIMESTAMP + URL_OAUTH_TOKEN + URL_OAUTH_VERSION;
-
-    final OAuth10aService service =  new ServiceBuilder()
-            .apiKey(WithingsApi.getKey())
-            .apiSecret(WithingsApi.getSecret())
-            .build(WithingsApi.instance());
-
-    final OAuth1RequestToken mRequestToken = service.getRequestToken();
-
-
-    public MainActivity() throws InterruptedException, ExecutionException, IOException {
-    }
-
-    String authUrl = service.getAuthorizationUrl(mRequestToken);
-
-    final OAuth1AccessToken mAccessToken = service.getAccessToken(mRequestToken, "verify got from user/callback");
-
-    final OAuthRequest mOAuthRequest = new OAuthRequest(Verb.GET, URL_BASE);*/
+    final String LOGTAG = "WITHINGS";
 
     public static OAuthService service;
     public static Token requestToken;
@@ -64,7 +48,7 @@ public class MainActivity extends AppCompatActivity{
                                     Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        if (requestCode == AUTHENTICATION_REQUEST) {
+        if (requestCode == AUTHENTICATION_REQUEST) {                                //Cannot solve what is the AUTHENTICATION_REQUEST used
 
             if (resultCode == RESULT_OK) {
                 Bundle extras = intent.getExtras();
@@ -107,12 +91,17 @@ public class MainActivity extends AppCompatActivity{
                 Log.i(LOGTAG, "token  : " + token);
                 Log.i(LOGTAG, "userId  : " + userId);
                 try {
-                    service = new ServiceBuilder().provider(WithingsApi.class)
+                    /*service = new ServiceBuilder().provider(WithingsApi.class)
                             .apiKey(WithingsApi.getKey())
-                            .apiSecret(WithingsApi.getSecret()).build();
-                    accessToken = new Token(token, secret);
+                            .apiSecret(WithingsApi.getSecret()).build();*/              //not working anymore
+                    service =  new ServiceBuilder()
+                            .apiKey(WithingsApi.getKey())
+                            .apiSecret(WithingsApi.getSecret())
+                            .build(WithingsApi.instance());
+                    //accessToken = new Token(token, secret);
+                    accessToken = new OAuth1AccessToken(token, secret);
 
-                    loadData();
+                    loadData();                                                        //no loadData method. What to be loaded?
                 } catch (Exception ex) {
                     startAuthenticationActivity();
                 }
@@ -125,18 +114,17 @@ public class MainActivity extends AppCompatActivity{
 
     private void startAuthenticationActivity() {
         Intent intent = new Intent(this,
-                ics.forth.withings.authentication.AuthenticationActivity.class);
+                ics.forth.withings.authentication.AuthenticationActivity.class);         //error for ics
         startActivityForResult(intent, AUTHENTICATION_REQUEST);
     }
 
     AsyncTask<Object, Object, Object> getAccessTokenThread = new AsyncTask<Object, Object, Object>() {
         @Override
         protected Object doInBackground(Object... params) {
-            accessToken = service
-                    .getAccessToken(requestToken, new Verifier(""));
+            accessToken = service.getAccessToken(requestToken, new Verifier(""));       //no getAccessToken & cannot resolve verifier
 
-            secret = accessToken.getSecret();
-            token = accessToken.getToken();
+            secret = accessToken.getSecret();                                           //getSecret method is not exist
+            token = accessToken.getToken();                                             //getToken method is not exist
             return null;
         }
 
@@ -144,7 +132,7 @@ public class MainActivity extends AppCompatActivity{
         protected void onPostExecute(Object result) {
             // authentication complete send the token,secret,userid, to python
             datasource.createUser(token, secret, userId);
-            loadData();
+            loadData();                                                               //no loadData method. What to be loaded?
         };
 
     };
