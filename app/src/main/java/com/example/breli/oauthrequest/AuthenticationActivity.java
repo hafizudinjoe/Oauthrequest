@@ -54,7 +54,7 @@ public class AuthenticationActivity extends Activity {
                 } catch (ExecutionException e) {
                     e.printStackTrace();
                 }
-                final String authURL = service.getAuthorizationUrl((OAuth1RequestToken) requestToken);
+                final String authURL = service.getAuthorizationUrl(requestToken);
                 wvAuthorise.post(new Runnable() {
                     @Override
                     public void run() {
