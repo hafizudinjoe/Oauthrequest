@@ -9,20 +9,20 @@ import android.util.Log;
 import android.widget.TextView;
 
 import com.github.scribejava.core.builder.ServiceBuilder;
-import com.github.scribejava.core.model.OAuth1AccessToken;
+import com.github.scribejava.core.model.OAuth1RequestToken;
 import com.github.scribejava.core.model.Token;
-import com.github.scribejava.core.oauth.OAuthService;
+import com.github.scribejava.core.oauth.OAuth10aService;
 
 import org.junit.rules.Verifier;
 import java.util.List;
 
-import com.example.breli.oauthrequest.AuthenticationActivity;
-
 public class MainActivity extends AppCompatActivity{
+    final int AUTHENTICATION_REQUEST = 101;
     final String LOGTAG = "WITHINGS";
 
-    public static OAuthService service;
-    public static Token requestToken;
+    public static OAuth10aService service;
+    //public static Token requestToken;
+    public static OAuth1RequestToken requestToken;
     String secret, token;
     Token accessToken;
     String userId = "";
@@ -35,7 +35,6 @@ public class MainActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        MainActivity _mainActivity = MainActivity.this;
 
         nameTV = (TextView) findViewById(R.id.nameTitleTextView);
         nameTV.setText("--");
@@ -48,7 +47,7 @@ public class MainActivity extends AppCompatActivity{
                                     Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        if (requestCode == AUTHENTICATION_REQUEST) {                                //Cannot solve what is the AUTHENTICATION_REQUEST used
+        if (requestCode == AUTHENTICATION_REQUEST) {
 
             if (resultCode == RESULT_OK) {
                 Bundle extras = intent.getExtras();
@@ -91,17 +90,13 @@ public class MainActivity extends AppCompatActivity{
                 Log.i(LOGTAG, "token  : " + token);
                 Log.i(LOGTAG, "userId  : " + userId);
                 try {
-                    /*service = new ServiceBuilder().provider(WithingsApi.class)
-                            .apiKey(WithingsApi.getKey())
-                            .apiSecret(WithingsApi.getSecret()).build();*/              //not working anymore
                     service =  new ServiceBuilder()
                             .apiKey(WithingsApi.getKey())
                             .apiSecret(WithingsApi.getSecret())
                             .build(WithingsApi.instance());
-                    //accessToken = new Token(token, secret);
-                    accessToken = new OAuth1AccessToken(token, secret);
 
-                    loadData();                                                        //no loadData method. What to be loaded?
+                    requestToken = service.getRequestToken();
+                    loadData();
                 } catch (Exception ex) {
                     startAuthenticationActivity();
                 }
@@ -113,18 +108,19 @@ public class MainActivity extends AppCompatActivity{
     }
 
     private void startAuthenticationActivity() {
-        Intent intent = new Intent(this,
-                ics.forth.withings.authentication.AuthenticationActivity.class);         //error for ics
+        Intent intent = new Intent(this, AuthenticationActivity.class);
         startActivityForResult(intent, AUTHENTICATION_REQUEST);
     }
 
     AsyncTask<Object, Object, Object> getAccessTokenThread = new AsyncTask<Object, Object, Object>() {
         @Override
         protected Object doInBackground(Object... params) {
-            accessToken = service.getAccessToken(requestToken, new Verifier(""));       //no getAccessToken & cannot resolve verifier
+            //https://github.com/scribejava/scribejava/wiki/Getting-Started#step-four-get-the-access-token
 
-            secret = accessToken.getSecret();                                           //getSecret method is not exist
-            token = accessToken.getToken();                                             //getToken method is not exist
+            //accessToken = service.getAccessToken(requestToken, new Verifier(""));       //no getAccessToken & cannot resolve verifier
+
+            //secret = accessToken.getSecret();                                           //getSecret method is not exist
+            //token = accessToken.getToken();                                             //getToken method is not exist
             return null;
         }
 
@@ -133,9 +129,11 @@ public class MainActivity extends AppCompatActivity{
             // authentication complete send the token,secret,userid, to python
             datasource.createUser(token, secret, userId);
             loadData();                                                               //no loadData method. What to be loaded?
-        };
+        }
 
     };
 
+
+    private void loadData(){}
 
 }
